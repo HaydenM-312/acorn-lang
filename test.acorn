@@ -1,0 +1,9 @@
+let main do
+	puts "Hello World"
+	puts 2 * 6 - 90 / 3
+	puts 2 * 6 - 90 / 3 8888
+	puts true /= false >= 0
+	3.14
+	2.0
+	1:100 0:2 1:100 0:2
+end
