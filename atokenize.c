@@ -17,7 +17,8 @@ int isalphasymbolic(char c) {
 int isdigitoid(char c) {
 	return isdigit(c) || c == '.';
 }
-
+// This is an incomplete function to do something with a token, in the future this will 
+// add to the token list.
 void token(char* t, char*** list) {
 	printf("%s\n",t); 
 }
