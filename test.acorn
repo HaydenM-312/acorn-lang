@@ -1,9 +1,10 @@
-let main do
-	puts "Hello World"
-	puts 2 * 6 - 90 / 3
-	puts 2 * 6 - 90 / 3 8888
-	puts true /= false >= 0
-	3.14
-	2.0
-	1:100 0:2 1:100 0:2
+let fizz n =
+	if n % 15 = 0 then "FizzBuzz" 
+	elif n % 3 = 0 then "Fizz" 
+	elif n % 5 = 0 then "Buzz" 
+	else n
+
+let main =
+	|> puts "Hello world"
+	|> puts (map fizz (1:100))
 end
