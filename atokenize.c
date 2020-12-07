@@ -77,17 +77,13 @@ void init_token(Token *t, int new_type, long new_line, char new_value[]) {
 void free_token(Token *t) {
 	free(t->value);
 }
-char** tokenize(char text[]) {
-	char** token_list;
+Token* tokenize(char text[]) {
+	Token* token_list;
 
 	for(size_t i = 0; i < strlen(text); i++) {
 		switch (text[i]) {
 			default:break;
 		}
 	}
-	Token v;
-	init_token(&v, TOKEN_STRING, 0, "Hello, friends");
-	print_token(v);
-	free_token(&v);
 	return token_list;
 }
