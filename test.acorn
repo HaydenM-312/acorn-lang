@@ -1,10 +1,11 @@
-let fizz n =
-	if n % 15 = 0 then "FizzBuzz" 
-	elif n % 3 = 0 then "Fizz" 
-	elif n % 5 = 0 then "Buzz" 
-	else n
+let fib x =
+	match x
+		case 0 -> 1
+		case 1 -> 1
+		case x -> fib (x - 1) + fib (x-2)
 
 let main =
 	|> puts "Hello world"
-	|> puts (map fizz (1:100))
+	|> puts 120..2000
+	|> 3.115
 end
