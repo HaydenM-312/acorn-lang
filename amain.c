@@ -13,6 +13,8 @@ int main(int argc, char* argv[]) {
 
 		free(tokens);
 		free(file); // Free the malloc'ed file
+		if (err) return(-1);
+
 	} else {
 		while (1) {
 			char in_text[1024];

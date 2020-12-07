@@ -151,7 +151,20 @@ Token* tokenize(char text[]) {
 				break;
 			case '"': {
 				size_t j = i+1;
-				i++; while(text[i] != '"') i++;  // Find the size of the number
+				i++; while(text[i] != '"') {
+					i++;
+					if (i > strlen(text)) {
+						fprintf(stderr, "Unfinished string at line %d.\n", cur_line);
+						err = 1;
+						token_count++;
+						token_array = realloc(token_array, sizeof(Token) * token_count);
+						token_array[token_count-1] = new_token(TOKEN_EOF, cur_line, '\0');
+
+						break;
+					}
+				}
+				if (err) break;
+				// Find the size of the number
 																// It makes no sense why decrementing i is necesarry here, but who cares if it works
 				char* out = malloc(i-j);		//
 				size_t sze = i-j;					//
@@ -314,5 +327,6 @@ Token* tokenize(char text[]) {
 				}
 		}
 	}
+
 	return token_array;
 }

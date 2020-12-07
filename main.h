@@ -8,3 +8,7 @@
 #define TOKEN_TYPE
 typedef struct Tokens Token;
 #endif
+#ifndef ERROR_VAR
+#define ERROR_VAR
+extern int err = 0;
+#endif
