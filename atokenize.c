@@ -81,11 +81,6 @@ char** tokenize(char text[]) {
 			default:break;
 		}
 	}
-	Token v, d;
-	init_token(&v, TOKEN_STRING, 0, "Hello, friends");
-	print_token(v);
-	init_token(&d, TOKEN_DIV, 0, NULL);
-	print_token(d);
 
 	return token_list;
 }
