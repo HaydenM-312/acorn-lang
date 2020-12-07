@@ -2,11 +2,11 @@
 #include "main.h"
 #include <ctype.h>
 
-typedef struct {
+struct Tokens{
 	int type;
 	long line;
 	char* value;
-} Token;
+};
 
 enum Token_Types {
 	TOKEN_PLUS,
@@ -73,6 +73,10 @@ void init_token(Token *t, int new_type, long new_line, char new_value[]) {
 		t->value = NULL;
 	}
 }
+
+void free_token(Token *t) {
+	free(t->value);
+}
 char** tokenize(char text[]) {
 	char** token_list;
 
@@ -81,11 +85,9 @@ char** tokenize(char text[]) {
 			default:break;
 		}
 	}
-	Token v, d;
+	Token v;
 	init_token(&v, TOKEN_STRING, 0, "Hello, friends");
 	print_token(v);
-	init_token(&d, TOKEN_DIV, 0, NULL);
-	print_token(d);
-
+	free_token(&v);
 	return token_list;
 }

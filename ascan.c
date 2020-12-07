@@ -18,13 +18,13 @@ char* load_txt(char path[]) {
 	size = ftell(fptr);	// Set the size to the offset
 	fseek(fptr, 0L, SEEK_SET); // Seek to beginning of file for loading into array
 	file_text = (char*)malloc(size); // Allocate memory based on the size of the file
-	
+
 	if (!file_text) {
 		fprintf(stderr, "Not enough memory");
 		exit(-1);
 	}
 
-	while ((c = fgetc(fptr)) != EOF) 
+	while ((c = fgetc(fptr)) != EOF)
 		file_text[n++] = (char)c; // Read file and write it into the array character by character
 	file_text[n] = '\0'; // Null-terminate the array
 
