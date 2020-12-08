@@ -160,6 +160,23 @@ Token* tokenize(char text[]) {
 		case '.':
 			if (text[i+1] == '.') {append_array(&tokens, new_token(TOKEN_RANGE, line, '\0')); i++;}
 			break;
+		case '"': {
+			char* name = malloc(1);
+			int count = 0;
+			i++;
+			while (text[i] != '"' && text[i] != '\n' && text[i] != '\0') { // Allow for decimals, but not more than one
+				name[count] = text[i];
+				count++;
+				i++;
+				name = realloc(name, count + 1);
+			} if (text[i] == '\n' || text[i] == '\0') {
+				err = 1;
+				fprintf(stderr, "Unterminated string at line %lu\n", line);
+				name[0] = '\0';
+				i--;
+			} else name[count] = '\0';
+			append_array(&tokens, new_token(TOKEN_STRING, line, name));
+		}
 		case '|':
 			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_NULLJOINER, line, '\0')); i++;}
 			break;
@@ -217,7 +234,17 @@ Token* tokenize(char text[]) {
 					name = realloc(name, count + 1);
 				}
 				name[count] = '\0';
-				append_array(&tokens, new_token(TOKEN_NAME, line, name));
+				if (!strcmp(name, "let")) append_array(&tokens, new_token(TOKEN_LET, line, '\0'));
+				else if (!strcmp(name, "set")) append_array(&tokens, new_token(TOKEN_SET, line, '\0'));
+				else if (!strcmp(name, "if")) append_array(&tokens, new_token(TOKEN_IF, line, '\0'));
+				else if (!strcmp(name, "then")) append_array(&tokens, new_token(TOKEN_THEN, line, '\0'));
+				else if (!strcmp(name, "elif")) append_array(&tokens, new_token(TOKEN_ELIF, line, '\0'));
+				else if (!strcmp(name, "else")) append_array(&tokens, new_token(TOKEN_ELSE, line, '\0'));
+				else if (!strcmp(name, "and")) append_array(&tokens, new_token(TOKEN_AND, line, '\0'));
+				else if (!strcmp(name, "or")) append_array(&tokens, new_token(TOKEN_OR, line, '\0'));
+				else if (!strcmp(name, "case")) append_array(&tokens, new_token(TOKEN_CASE, line, '\0'));
+				else if (!strcmp(name, "match")) append_array(&tokens, new_token(TOKEN_MATCH, line, '\0'));
+				else append_array(&tokens, new_token(TOKEN_NAME, line, name));
 				if (text[i] != ' ') i--;
 			} else if (isdigit(text[i])) { // If the character is a letter or underscore, then add it as a 'name' token
 				char* name = malloc(1);
