@@ -1,0 +1,9 @@
+using iostream
+
+let map fn list =
+	if list = nil then nil
+	else fn (head ls) + map fn (tail ls)
+
+	"Hello " + "World"
+
+	let add a b = a + b

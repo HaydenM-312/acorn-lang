@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 		free(file); // Free the malloc'ed file
 		if (err) return(-1);
 
-	} else {
+	} else { 
 		while (1) {
 			char in_text[1024];
 			printf("> ");

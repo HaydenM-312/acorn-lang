@@ -1,2 +1,2 @@
 compiler: amain.c
-	gcc amain.c -o acorn
+	gcc amain.c -o acornc

@@ -35,9 +35,13 @@ enum Token_Types {
 	TOKEN_NIL,
 	TOKEN_CASE,
 	TOKEN_MATCH,
-	TOKEN_ARROW,
+	TOKEN_RARROW,
+	TOKEN_LARROW,
+	TOKEN_COMMA,
 	TOKEN_EOF,
-	TOKEN_SOF
+	TOKEN_SOF,
+	TOKEN_USING,
+	TOKEN_NEWLINE
 };
 char* Token_Types_Print[] = {
 	"TOKEN_AND",
@@ -72,9 +76,13 @@ char* Token_Types_Print[] = {
 	"TOKEN_NIL",
 	"TOKEN_CASE",
 	"TOKEN_MATCH",
-	"TOKEN_ARROW",
+	"TOKEN_RARROW",
+	"TOKEN_LARROW",
+	"TOKEN_COMMA",
 	"TOKEN_EOF",
-	"TOKEN_SOF"
+	"TOKEN_SOF",
+	"TOKEN_USING",
+	"TOKEN_NEWLINE"
 };
 
 typedef struct TokenArr {
@@ -153,12 +161,18 @@ Token* tokenize(char text[]) {
 		switch (text[i]) {
 		// Misc
 		case '\n': // Increment line variable on newline, for better error handling
+			append_array(&tokens, new_token(TOKEN_NEWLINE, line, '\0'));
 			line++;
 			break;
+		case ' ': 
+		case '\t': break;
 		case ';':
 			while(text[i+1] != '\n') i++;
 		case '.':
 			if (text[i+1] == '.') {append_array(&tokens, new_token(TOKEN_RANGE, line, '\0')); i++;}
+			break;
+		case ',':
+			append_array(&tokens, new_token(TOKEN_COMMA, line, '\0'));
 			break;
 		case '"': {
 			char* name = malloc(1);
@@ -185,7 +199,7 @@ Token* tokenize(char text[]) {
 			append_array(&tokens, new_token(TOKEN_PLUS, line, '\0'));
 			break;
 		case '-':
-			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_ARROW, line, '\0')); i++;}
+			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_RARROW, line, '\0')); i++;}
 			else append_array(&tokens, new_token(TOKEN_MINUS, line, '\0'));
 			break;
 		case '*':
@@ -204,6 +218,7 @@ Token* tokenize(char text[]) {
 			break;
 		case '<':
 			if (text[i+1] == '=') { append_array(&tokens, new_token(TOKEN_LTEQU, line, '\0')); i++;}
+			else if (text[i+1] == '-') { append_array(&tokens, new_token(TOKEN_LARROW, line, '\0')); i++;}
 			else append_array(&tokens, new_token(TOKEN_LTE, line, '\0'));
 			break;
 		case '>':
@@ -244,6 +259,7 @@ Token* tokenize(char text[]) {
 				else if (!strcmp(name, "or")) append_array(&tokens, new_token(TOKEN_OR, line, '\0'));
 				else if (!strcmp(name, "case")) append_array(&tokens, new_token(TOKEN_CASE, line, '\0'));
 				else if (!strcmp(name, "match")) append_array(&tokens, new_token(TOKEN_MATCH, line, '\0'));
+				else if (!strcmp(name, "using")) append_array(&tokens, new_token(TOKEN_USING, line, '\0'));
 				else append_array(&tokens, new_token(TOKEN_NAME, line, name));
 				if (text[i] != ' ') i--;
 			} else if (isdigit(text[i])) { // If the character is a letter or underscore, then add it as a 'name' token
