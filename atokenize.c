@@ -2,9 +2,9 @@
 #include "main.h"
 #include <ctype.h>
 
-size_t i;
-
 enum Token_Types {
+	TOKEN_AND,
+	TOKEN_OR,
 	TOKEN_PLUS,
 	TOKEN_MINUS,
 	TOKEN_TIMES,
@@ -23,7 +23,8 @@ enum Token_Types {
 	TOKEN_LBRACKET,
 	TOKEN_RBRACKET,
 	TOKEN_NAME,
-	TOKEN_NUM,
+	TOKEN_INTEGER,
+	TOKEN_FLOAT,
 	TOKEN_STRING,
 	TOKEN_IF,
 	TOKEN_THEN,
@@ -35,11 +36,12 @@ enum Token_Types {
 	TOKEN_CASE,
 	TOKEN_MATCH,
 	TOKEN_ARROW,
-	TOKEN_DO,
 	TOKEN_EOF,
 	TOKEN_SOF
 };
 char* Token_Types_Print[] = {
+	"TOKEN_AND",
+	"TOKEN_OR",
 	"TOKEN_PLUS",
 	"TOKEN_MINUS",
 	"TOKEN_TIMES",
@@ -58,7 +60,8 @@ char* Token_Types_Print[] = {
 	"TOKEN_LBRACKET",
 	"TOKEN_RBRACKET",
 	"TOKEN_NAME",
-	"TOKEN_NUM",
+	"TOKEN_INTEGER",
+	"TOKEN_FLOAT",
 	"TOKEN_STRING",
 	"TOKEN_IF",
 	"TOKEN_THEN",
@@ -70,10 +73,14 @@ char* Token_Types_Print[] = {
 	"TOKEN_CASE",
 	"TOKEN_MATCH",
 	"TOKEN_ARROW",
-	"TOKEN_DO",
 	"TOKEN_EOF",
 	"TOKEN_SOF"
 };
+
+typedef struct TokenArr {
+	Token* arr;
+	long size;
+} TokenArray;
 
 struct Tokens {
 	int type;
@@ -81,8 +88,28 @@ struct Tokens {
 	char* value;
 };
 
+Token new_token(int new_type, long new_line, char new_value[]);
+
+// TokenArray functions
+void init_array(TokenArray *array) {
+	array->arr = (Token*)malloc(sizeof(Token));
+	array->arr[0] = new_token(TOKEN_SOF, 0L, '\0');
+	array->size = 1;
+}
+
+void append_array(TokenArray *array, Token tok) {
+	array->size++;
+	array->arr = (Token*)realloc(array->arr, sizeof(Token) * array->size);
+	(array->arr)[array->size-1] = tok;
+}
+
+void free_array(TokenArray *array) {
+	free(array->arr);
+}
+
+// Token functions
 void print_token(Token t) {
-	printf("[type:%s", Token_Types_Print[t.type]);
+	printf("[type:%s, line:%d", Token_Types_Print[t.type], t.line);
 	if (t.value != NULL) {
 		printf(", val:%s]\n", t.value);
 	} else {
@@ -118,215 +145,98 @@ void free_token(Token *t) {
 	free(t->value);
 }
 
-char peek(char array[]) {
-	return array[i + 1];
-}
-int isalphasymbolic(char c) {
-	return (isalpha(c) ||  c == '_');
-}
-
-int isdigitoid(char c) {
-	return isdigit(c) || c == '.';
-}
-
-
 Token* tokenize(char text[]) {
-	Token* token_array = malloc(sizeof(Token));
-	token_array[0] = new_token(TOKEN_SOF, 0, '\0');
-	long token_count = 1;
-	long cur_line = 1;
-	for(i = 0; i <= strlen(text); i++) {
-		switch(text[i]) {
-			// Misc operators
-			case 0:
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_EOF, cur_line, '\0');
-				break;
-			case '\n':
-				cur_line++;
-				break;
-			case ';':
-				while (text[i] != '\n') i++;
-				break;
-			case '"': {
-				size_t j = i+1;
-				i++; while(text[i] != '"') {
+	TokenArray tokens;
+	long line = 1;
+	init_array(&tokens);
+	for(size_t i = 0; text[i] != '\0'; i++) {
+		switch (text[i]) {
+		// Misc
+		case '\n': // Increment line variable on newline, for better error handling
+			line++;
+			break;
+		case ';':
+			while(text[i+1] != '\n') i++;
+		case '.':
+			if (text[i+1] == '.') {append_array(&tokens, new_token(TOKEN_RANGE, line, '\0')); i++;}
+			break;
+		case '|':
+			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_NULLJOINER, line, '\0')); i++;}
+			break;
+		// Basic arithmatic
+		case '+':
+			append_array(&tokens, new_token(TOKEN_PLUS, line, '\0'));
+			break;
+		case '-':
+			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_ARROW, line, '\0')); i++;}
+			else append_array(&tokens, new_token(TOKEN_MINUS, line, '\0'));
+			break;
+		case '*':
+			append_array(&tokens, new_token(TOKEN_TIMES, line, '\0'));
+			break;
+		case '%':
+			append_array(&tokens, new_token(TOKEN_MOD, line, '\0'));
+			break;
+		case '/':
+			if (text[i+1] == '=') {append_array(&tokens, new_token(TOKEN_NEQ, line, '\0')); i++;}
+			else append_array(&tokens, new_token(TOKEN_DIV, line, '\0'));
+			break;
+		// Comparison operators
+		case '=':
+			append_array(&tokens, new_token(TOKEN_EQU, line, '\0'));
+			break;
+		case '<':
+			if (text[i+1] == '=') { append_array(&tokens, new_token(TOKEN_LTEQU, line, '\0')); i++;}
+			else append_array(&tokens, new_token(TOKEN_LTE, line, '\0'));
+			break;
+		case '>':
+			if (text[i+1] == '=') {append_array(&tokens, new_token(TOKEN_GTEQU, line, '\0')); i++;}
+			else append_array(&tokens, new_token(TOKEN_GTE, line, '\0'));
+			break;
+		// Control flow
+		case '(':
+			append_array(&tokens, new_token(TOKEN_LPAREN, line, '\0'));
+			break;
+		case ')':
+			append_array(&tokens, new_token(TOKEN_RPAREN, line, '\0'));
+			break;
+		case '[':
+			append_array(&tokens, new_token(TOKEN_LBRACKET, line, '\0'));
+			break;
+		case ']':
+			append_array(&tokens, new_token(TOKEN_RBRACKET, line, '\0'));
+			break;
+		default:
+			if (isalpha(text[i]) || text[i] == '_') { // If the character is a letter or underscore, then add it as a 'name' token
+				char* name = malloc(1);
+				int count = 0;
+				while (isalpha(text[i]) || text[i] == '_' || isdigit(text[i])) { // Allow for digits
+					name[count] = text[i];
 					i++;
-					if (i > strlen(text)) {
-						fprintf(stderr, "Unfinished string at line %d.\n", cur_line);
-						err = 1;
-						token_count++;
-						token_array = realloc(token_array, sizeof(Token) * token_count);
-						token_array[token_count-1] = new_token(TOKEN_EOF, cur_line, '\0');
-
-						break;
-					}
+					count++;
+					name = realloc(name, count + 1);
 				}
-				if (err) break;
-				// Find the size of the number
-																// It makes no sense why decrementing i is necesarry here, but who cares if it works
-				char* out = malloc(i-j);		//
-				size_t sze = i-j;					//
-				for(size_t k = 0; k < sze; k++) {
-					out[k] = text[j];
-					j++;
+				name[count] = '\0';
+				append_array(&tokens, new_token(TOKEN_NAME, line, name));
+				if (text[i] != ' ') i--;
+			} else if (isdigit(text[i])) { // If the character is a letter or underscore, then add it as a 'name' token
+				char* name = malloc(1);
+				int count = 0;
+				int ntype = TOKEN_INTEGER;
+				while ((text[i] == '.' && text[i+1] != '.') || isdigit(text[i])) { // Allow for decimals, but not more than one
+					name[count] = text[i];
+					i++;
+					count++;
+					name = realloc(name, count + 1);
+					if (text[i] == '.' && text[i+1] != '.') ntype = TOKEN_FLOAT;
 				}
-
-				out[sze] = '\0';
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_STRING, cur_line, out);
-				break;
+				name[count] = '\0';
+				append_array(&tokens, new_token(ntype, line, name));
+				if (text[i] != ' ') i--;
 			}
-			case '|':
-				if (peek(text) == '>') {
-					token_count++;
-					token_array = realloc(token_array, sizeof(Token) * token_count);
-					token_array[token_count-1] = new_token(TOKEN_NULLJOINER, cur_line, '\0');
-					i++;
-				}
-				break;
-			// Basic math operators
-			case '%':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_MOD, cur_line, '\0');
-				break;
-			case '+':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_PLUS, cur_line, '\0');
-				break;
-			case '-':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				if (peek(text) == '>') {
-					token_array[token_count-1] = new_token(TOKEN_ARROW, cur_line, '\0');
-					i++;
-				} else {
-					token_array[token_count-1] = new_token(TOKEN_MINUS, cur_line, '\0');
-				}
-				break;
-			case '*':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_TIMES, cur_line, '\0');
-				break;
-			case '.':
-				if (peek(text) == '.') {
-					token_count++;
-					token_array = realloc(token_array, sizeof(Token) * token_count);
-					token_array[token_count-1] = new_token(TOKEN_RANGE, cur_line, '\0');
-					i++;
-				}
-				break;
-			// Brackets
-			case '(':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_LPAREN, cur_line, '\0');
-				break;
-			case ')':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_RPAREN, cur_line, '\0');
-				break;
-			case '[':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_LBRACKET, cur_line, '\0');
-				break;
-			case ']':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_RBRACKET, cur_line, '\0');
-				break;
-			case '/':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				if (peek(text) == '=') {
-					token_array[token_count-1] = new_token(TOKEN_NEQ, cur_line, '\0');
-					i++;
-				}
-				else {
-					token_array[token_count-1] = new_token(TOKEN_DIV, cur_line, '\0');
-				}
-				break;
-			// Comparison operators
-			case '=':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				token_array[token_count-1] = new_token(TOKEN_EQU, cur_line, '\0');
-				break;
-			case '>':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				if (peek(text) == '=') {
-					token_array[token_count-1] = new_token(TOKEN_GTEQU, cur_line, '\0');
-					i++;
-				}
-				else {
-					token_array[token_count-1] = new_token(TOKEN_GTE, cur_line, '\0');
-				}
-				break;
-			case '<':
-				token_count++;
-				token_array = realloc(token_array, sizeof(Token) * token_count);
-				if (peek(text) == '=') {
-						token_array[token_count-1] = new_token(TOKEN_LTEQU, cur_line, '\0');
-					i++;
-				}
-				else {
-					token_array[token_count-1] = new_token(TOKEN_LTE, cur_line, '\0');
-				}
-				break;
-			default:
-				if (isalphasymbolic(text[i])) {
-					size_t j = i;
-					while((isalphasymbolic(text[i]))) i++; // Find the size of the text
-					i--;
-					char* out = malloc(i-j);
-					size_t sze = i-j+1;
-					for(size_t k = 0; k < sze; k++) {
-						out[k] = text[j];
-						j++;
-					}
-					out[sze] = '\0';
-					token_count++;
-					token_array = realloc(token_array, sizeof(Token) * token_count);
-						if (strcmp(out, "let") == 0) {token_array[token_count-1] = new_token(TOKEN_LET, cur_line, '\0');}
-						else if (strcmp(out, "set") == 0) {token_array[token_count-1] = new_token(TOKEN_SET, cur_line, '\0');}
-						else if (strcmp(out, "if") == 0) {token_array[token_count-1] = new_token(TOKEN_IF, cur_line, '\0');}
-						else if (strcmp(out, "elif") == 0) {token_array[token_count-1] = new_token(TOKEN_ELIF, cur_line, '\0');}
-						else if (strcmp(out, "else") == 0) {token_array[token_count-1] = new_token(TOKEN_ELSE, cur_line, '\0');}
-						else if (strcmp(out, "then") == 0) {token_array[token_count-1] = new_token(TOKEN_THEN, cur_line, '\0');}
-						else if (strcmp(out, "let") == 0) {token_array[token_count-1] = new_token(TOKEN_LET, cur_line, '\0');}
-						else if (strcmp(out, "case") == 0) {token_array[token_count-1] = new_token(TOKEN_CASE, cur_line, '\0');}
-						else if (strcmp(out, "match") == 0) {token_array[token_count-1] = new_token(TOKEN_MATCH, cur_line, '\0');}
-						else if (strcmp(out, "do") == 0) {token_array[token_count-1] = new_token(TOKEN_DO, cur_line, '\0');}
-						else if (strcmp(out, "end") == 0 || strcmp(out, "nil") == 0) { token_array[token_count-1] = new_token(TOKEN_NIL, cur_line, '\0');}
-						else {token_array[token_count-1] = new_token(TOKEN_NAME, cur_line, out);}
-					break;
-				} else if (isdigit(text[i])) {
-					size_t j = i;
-					while(isdigit(text[i]) || (text[i] == '.' && peek(text) != '.')) i++;  // Find the size of the number
-					i--;												// It makes no sense why decrementing i is necesarry here, but who cares if it works
-					char* out = malloc(i-j);		//
-					size_t sze = i-j+1;					//
-					for(size_t k = 0; k < sze; k++) {
-						out[k] = text[j];
-						j++;
-					}
-
-					out[sze] = '\0';
-					token_count++;
-					token_array = realloc(token_array, sizeof(Token) * token_count);
-					token_array[token_count-1] = new_token(TOKEN_NUM, cur_line, out);
-					break;
-				}
+			break;
 		}
 	}
-
-	return token_array;
+	append_array(&tokens, new_token(TOKEN_EOF, line, '\0'));
+	return tokens.arr;
 }

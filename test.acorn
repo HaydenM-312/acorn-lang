@@ -3,9 +3,13 @@ let fib x =
 		case 0 -> 1
 		case 1 -> 1
 		case x -> fib (x - 1) + fib (x-2)
+		
+let map fn ls =
+	match ls
+		case nil -> []
+		case ls -> [fn (head ls)] + map fn (tail ls)
 
 let main =
 	|> puts "Hello world"
-	|> puts 120..2000
-	|> 3.115
+	|> puts ( map (x -> x * x) (1..10) )
 end
