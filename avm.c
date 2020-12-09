@@ -31,6 +31,7 @@ enum opcodes {
   OP_EOF
 };
 
+
 typedef struct virtual_machine {
   byte stack[0x10000];
   int sp;
@@ -43,9 +44,9 @@ void init_vm(VM* vm) {
 }
 
 byte instructions[] = {
-  OP_BPUSH, 0x5,
-  OP_BPUSH, 0x2,
-  OP_BDIV,
+  OP_BPUSH, 1,
+  OP_BPUSH, 3,
+  OP_BSUB,
   OP_EOF
 };
 
@@ -68,6 +69,7 @@ void print_stack(VM vm) {
 void run_vm(byte instruct[], VM* vm) {
   while (instruct[vm->pc] != OP_EOF) {
     switch(instruct[vm->pc]) {
+      // Byte Instructions
       case OP_BPUSH:
         push(vm, instruct[++vm->pc]);
         break;
@@ -91,6 +93,36 @@ void run_vm(byte instruct[], VM* vm) {
       }
       case OP_BPOP:
         pop(vm);
+        break;
+      case OP_BEQU:
+        if (pop(vm) == pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
+        break;
+      case OP_BNEQ:
+        if (pop(vm) != pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
+        break;
+      case OP_BGT:
+        if (pop(vm) > pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
+        break;
+      case OP_BLT:
+        if (pop(vm) < pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
+        break;
+      case OP_BGTE:
+        if (pop(vm) >= pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
+        break;
+      case OP_BLTE:
+        if (pop(vm) <= pop(vm)) {
+          vm->pc = instruct[vm->pc+1]-1;
+        }
         break;
       default:break;
     }
