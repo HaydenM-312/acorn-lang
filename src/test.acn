@@ -1,9 +1,11 @@
 using iostream
 
-let map fn list =
-	if list = nil then nil
-	else fn (head ls) + map fn (tail ls)
+let lambda_add = a,b,c -> a + b + c ; Does the same thing
 
-	"Hello " + "World"
+let add a, b, c = a + b + c ; This one is just as a function, the above is assigning a variable to an anonymous function
 
-	let add a b = a + b
+let main =
+	|> stdout <- "1 + 3 + 9 equals"
+	|> stdout <- (str) add 1, 3, 9 + "\n"
+end
+
