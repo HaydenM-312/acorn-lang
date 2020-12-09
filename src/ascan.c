@@ -37,6 +37,7 @@ enum Token_Types {
 	TOKEN_RARROW,
 	TOKEN_LARROW,
 	TOKEN_COMMA,
+	TOKEN_DOT,
 	TOKEN_EOF,
 	TOKEN_SOF,
 	TOKEN_USING
@@ -77,6 +78,7 @@ char* Token_Types_Print[] = {
 	"TOKEN_RARROW",
 	"TOKEN_LARROW",
 	"TOKEN_COMMA",
+	"TOKEN_DOT",
 	"TOKEN_EOF",
 	"TOKEN_SOF",
 	"TOKEN_USING"
@@ -207,6 +209,7 @@ Token* tokenize(char path[], int t) {
 			while(text[i+1] != '\n') i++;
 		case '.':
 			if (text[i+1] == '.') {append_array(&tokens, new_token(TOKEN_RANGE, line, '\0')); i++;}
+			else append_array(&tokens, new_token(TOKEN_DOT, line, '\0'));
 			break;
 		case ',':
 			append_array(&tokens, new_token(TOKEN_COMMA, line, '\0'));
