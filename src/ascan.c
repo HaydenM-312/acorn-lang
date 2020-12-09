@@ -39,8 +39,7 @@ enum Token_Types {
 	TOKEN_COMMA,
 	TOKEN_EOF,
 	TOKEN_SOF,
-	TOKEN_USING,
-	TOKEN_NEWLINE
+	TOKEN_USING
 };
 char* Token_Types_Print[] = {
 	"TOKEN_AND",
@@ -80,8 +79,7 @@ char* Token_Types_Print[] = {
 	"TOKEN_COMMA",
 	"TOKEN_EOF",
 	"TOKEN_SOF",
-	"TOKEN_USING",
-	"TOKEN_NEWLINE"
+	"TOKEN_USING"
 };
 
 typedef struct TokenArr {
@@ -189,16 +187,18 @@ char* load_txt(char path[]) {
 	return file_text; // This returns a malloc'ed value, which NEEDS TO BE FREED
 }
 
-Token* tokenize(char path[]) {
-	char* text = load_txt(path);
+Token* tokenize(char path[], int t) {
+	char* text;
+	if(t == 0) text = load_txt(path);
+	else text = path;
 	TokenArray tokens;
 	long line = 1;
+	long character = 1;
 	init_array(&tokens);
 	for(size_t i = 0; text[i] != '\0'; i++) {
 		switch (text[i]) {
 		// Misc
 		case '\n': // Increment line variable on newline, for better error handling
-			append_array(&tokens, new_token(TOKEN_NEWLINE, line, '\0'));
 			line++;
 			break;
 		case ' ':
@@ -216,7 +216,16 @@ Token* tokenize(char path[]) {
 			int count = 0;
 			i++;
 			while (text[i] != '"' && text[i] != '\n' && text[i] != '\0') { // Allow for decimals, but not more than one
-				name[count] = text[i];
+				if (text[i] != '\\') name[count] = text[i];
+				else {
+					switch (text[i+1]) {
+						case 'n': name[count] = '\n'; i++; break;
+						case 't': name[count] = '\t'; i++; break;
+						case '"': name[count] = '"'; i++; break;
+						case '\\': name[count] = '\\'; i++; break;
+						default: i++; break;
+					}
+				}
 				count++;
 				i++;
 				name = realloc(name, count + 1);
@@ -226,6 +235,7 @@ Token* tokenize(char path[]) {
 				name[0] = '\0';
 				i--;
 			} else name[count] = '\0';
+			i++;
 			append_array(&tokens, new_token(TOKEN_STRING, line, name));
 		}
 		case '|':
