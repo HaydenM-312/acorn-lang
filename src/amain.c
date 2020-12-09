@@ -1,4 +1,5 @@
-#include "main.h"
+#include "amain.h"
+
 int main(int argc, char* argv[]) {
 		if (argc > 1) {
 		Token* tokens = tokenize(argv[1],0); // Load the file named in the first argument into an array

@@ -1,11 +1,10 @@
 using iostream
 
-let lambda_add = a,b,c -> a + b + c ; Does the same thing
+let lambda_add = a, b, c -> a + b + c ; Does the same thing
 
 let add a, b, c = a + b + c ; This one is just as a function, the above is assigning a variable to an anonymous function
 
 let main =
-	|> stdout <- "1 + 3 + 9 equals"
-	|> stdout <- (str) add 1, 3, 9 + "\n"
+	|> stdout <- "1 + 3 + 9 equals: "
+	|> stdout <- (str) add 1, 3, 9 + "\n" ; This will print to the console 1 + 3 + 9 equals: 13
 end
-

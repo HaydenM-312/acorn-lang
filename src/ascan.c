@@ -1,5 +1,5 @@
 #pragma once
-#include "main.h"
+#include "amain.h"
 
 enum Token_Types {
 	TOKEN_AND,
