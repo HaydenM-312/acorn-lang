@@ -259,10 +259,13 @@ Token* tokenize(char path[], int t) {
 			append_array(&tokens, new_token(TOKEN_MOD, line, '\0'));
 			break;
 		case '/':
-			if (text[i+1] == '=') {append_array(&tokens, new_token(TOKEN_NEQ, line, '\0')); i++;}
-			else append_array(&tokens, new_token(TOKEN_DIV, line, '\0'));
+			append_array(&tokens, new_token(TOKEN_DIV, line, '\0'));
 			break;
 		// Comparison operators
+			break;
+		case '!':
+			if (text[i+1] == '=') {append_array(&tokens, new_token(TOKEN_NEQ, line, '\0')); i++;}
+			break;
 		case '=':
 			append_array(&tokens, new_token(TOKEN_EQU, line, '\0'));
 			break;

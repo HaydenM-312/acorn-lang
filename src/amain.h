@@ -7,6 +7,11 @@
 #define TOKEN_TYPE
 typedef struct Tokens Token;
 #endif
+#ifndef TREE_TYPE
+#define TREE_TYPE
+typedef struct TREE Tree;
+
+#endif
 #ifndef ERROR_VAR
 #define ERROR_VAR
 extern int err = 0;

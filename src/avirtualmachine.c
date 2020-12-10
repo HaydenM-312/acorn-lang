@@ -1,23 +1,29 @@
 #include "amain.h"
 
+typedef signed char byte; 
+typedef unsigned char ubyte; 
+
 enum op_codes {
-	OP_EOF,
+	OP_HALT,
 	OP_GOTO,
-	OP_SCONST,
-	OP_SPOP,
-	OP_SLOAD,
-	OP_SADD,
-	OP_SSUB,
-	OP_SMULT,
-	OP_SDIV,
-	OP_SNEGATE,
-	OP_SEQU,
-	OP_SNEQ,
-	OP_SGT,
-	OP_SLT,
+	OP_CALL,
+	OP_RETURN,
+	OP_JUMP,
+	OP_BCONST,
+	OP_BPOP,
+	OP_BADD,
+	OP_BSUB,
+	OP_BMULT,
+	OP_BDIV,
+	OP_BNEGATE,
+	OP_BEQU,
+	OP_BNEQ,
+	OP_BGT,
+	OP_BLT,
+	OP_BLOAD,
+	OP_BSTORE,
 	OP_ICONST,
 	OP_IPOP,
-	OP_ILOAD,
 	OP_IADD,
 	OP_ISUB,
 	OP_IMULT,
@@ -26,30 +32,48 @@ enum op_codes {
 	OP_IEQU,
 	OP_INEQ,
 	OP_IGT,
-	OP_ILT
+	OP_ILT,
+	OP_ILOAD,
+	OP_ISTORE,
+	OP_DCONST,
+	OP_DPOP,
+	OP_DADD,
+	OP_DSUB,
+	OP_DMULT,
+	OP_DDIV,
+	OP_DNEGATE,
+	OP_DEQU,
+	OP_DNEQ,
+	OP_DGT,
+	OP_DLT,
+	OP_DLOAD,
+	OP_DSTORE
 };
 
 typedef struct {
-	signed short* memory;
+	byte* memory;
+	byte* call;
 	long pc;
 	long sp;
 	long fp;
+	long cp;
 } VM;
 
 void init_vm(VM* vm) {
 	vm->pc = 0;
 	vm->sp = 0;
-	vm->fp = 0;
-	vm->memory = (signed short*) malloc(0x100000 * sizeof(short));
+	vm->fp = 0xfffff;
+	vm->memory = (byte*) malloc(0x100000 * sizeof(byte));
+	vm->call = (byte*) malloc(0x10000 * sizeof(byte));
 }
 
 void clear_vm(VM* vm) {
 	free(vm->memory);
 }
 
-short* read_bin(char path[]) {
+byte* read_bin(char path[]) {
 	FILE *fptr = fopen(path, "rb");
-	short* file;
+	byte* file;
 	size_t size; 
 
 	// If the file doesn't exist then return an error and exit the program
@@ -61,14 +85,14 @@ short* read_bin(char path[]) {
 	fseek(fptr, 0L, SEEK_END); // Seek to end of file
 	size = ftell(fptr);	// Set the size to the offset
 	fseek(fptr, 0L, SEEK_SET); // Seek to beginning of file for loading into array
-	file = (signed short*) malloc(sizeof(short)*size); // Allocate memory based on the size of the file
+	file = (byte*) malloc(sizeof(byte)*size); // Allocate memory based on the size of the file
 
 	if (!file) {
 		fprintf(stderr, "Not enough memory");
 		exit(-1);
 	}
 	
-	fread(file, sizeof(signed short), size, fptr); // Read file and write it into the array
+	fread(file, sizeof(byte), size, fptr); // Read file and write it into the array
 
 	if(file == NULL) {
 		fprintf(stderr, "Unable to read file");
@@ -78,56 +102,75 @@ short* read_bin(char path[]) {
 	return file; // This returns a malloc'ed value, which NEEDS TO BE FREED
 }
 
-signed short push(VM *vm, signed short data) {
+byte push(VM *vm, byte data) {
 	vm->memory[vm->sp++] = data;
 	return data;
 }
-signed short pop(VM *vm) {
+
+byte local_push(VM *vm, byte data) {
+	vm->memory[vm->fp--] = data;
+	return data;
+}
+
+byte pop(VM *vm) {
 	return vm->memory[--vm->sp];
 }
 
 void print_vm(VM vm) {
 	printf("[");
 	for(long i = 0; i < vm.sp; i++) {
-		printf(" %d", vm.memory[i]);
+		printf(" %x", vm.memory[i]);
+	}
+	printf(" ]\t");
+	printf("[");
+	for(long i = 0xfffff; i > vm.fp; i--) {
+		printf(" %x", vm.memory[i]);
 	}
 	printf(" ]\n");
 }
 
 int main(int argc, char* argv[]) {
-	signed short* code = read_bin(argv[1]);
+	byte* code = read_bin(argv[1]);
 	VM vm;
 	init_vm(&vm);
-	while (code[vm.pc] != OP_EOF) {
+	while (code[vm.pc] != OP_HALT) {
+		if (vm.pc >= 0x100000) {
+			fprintf(stderr, "Stack overflow.");
+			exit(-1);
+		}
 		switch(code[vm.pc]) {
-			case OP_SCONST:
+			// 1 Byte instructions
+			case OP_BCONST:
 				push(&vm, code[++vm.pc]);
 				break;
-			case OP_SPOP:
+			case OP_BSTORE:
+				local_push(&vm, code[++vm.pc]);
+				break;
+			case OP_BPOP:
 				pop(&vm);
 				break;
-			case OP_SNEGATE:
+			case OP_BNEGATE:
 				push(&vm, -1 * pop(&vm));
 				break;
-			case OP_SADD:
+			case OP_BADD:
 				push(&vm, pop(&vm) + pop(&vm));
 				break;
-			case OP_SSUB:{
-			 	signed short a = pop(&vm);
-			 	signed short b = pop(&vm);
+			case OP_BSUB:{
+			 	byte a = pop(&vm);
+			 	byte b = pop(&vm);
 				push(&vm, b - a);
 				break;}
-			case OP_SMULT:
+			case OP_BMULT:
 				push(&vm, pop(&vm) * pop(&vm));
 				break;
-			case OP_SDIV:{
-			 	signed short a = pop(&vm);
-			 	signed short b = pop(&vm);
+			case OP_BDIV:{
+			 	byte a = pop(&vm);
+			 	byte b = pop(&vm);
 				push(&vm, b /  a);
 				break;}
-			case OP_SGT:{
-			 	signed short a = pop(&vm);
-			 	signed short b = pop(&vm);
+			case OP_BGT:{
+			 	byte a = pop(&vm);
+			 	byte b = pop(&vm);
 				if (b > a) {
 					vm.pc = code[vm.pc+1]--;
 				} else {
@@ -135,6 +178,32 @@ int main(int argc, char* argv[]) {
 				}
 				break;
 			}
+			case OP_BLT:{
+			 	byte a = pop(&vm);
+			 	byte b = pop(&vm);
+				if (b < a) {
+					vm.pc = code[vm.pc+1]--;
+				} else {
+					vm.pc++;
+				}
+				break;
+			}
+			case OP_JUMP: 
+				vm.pc += code[vm.pc+1]--;
+				break;
+			// 4 Byte instructions
+			case OP_ICONST:
+				push(&vm, code[++vm.pc]);
+				push(&vm, code[++vm.pc]);
+				break;
+			case OP_IADD:{
+				//push(&vm, pop(&vm) + pop(&vm));
+				ubyte a = pop(&vm);
+				ubyte b = pop(&vm);
+				ubyte c = pop(&vm);
+				ubyte d = pop(&vm);
+				printf("0x%d\n", (short) (a | b << 8) + (short) (a | b << 8));
+				break;}
 			default: break;
 		}
 		printf("%d \t", vm.pc);
