@@ -2,7 +2,20 @@
 
 enum op_codes {
 	OP_EOF,
-	OP_IPUSH,
+	OP_GOTO,
+	OP_SCONST,
+	OP_SPOP,
+	OP_SLOAD,
+	OP_SADD,
+	OP_SSUB,
+	OP_SMULT,
+	OP_SDIV,
+	OP_SNEGATE,
+	OP_SEQU,
+	OP_SNEQ,
+	OP_SGT,
+	OP_SLT,
+	OP_ICONST,
 	OP_IPOP,
 	OP_ILOAD,
 	OP_IADD,
@@ -10,16 +23,14 @@ enum op_codes {
 	OP_IMULT,
 	OP_IDIV,
 	OP_INEGATE,
-	OP_GOTO,
 	OP_IEQU,
 	OP_INEQ,
-	OP_GT,
-	OP_LT
-
+	OP_IGT,
+	OP_ILT
 };
 
 typedef struct {
-	short* memory;
+	signed short* memory;
 	long pc;
 	long sp;
 	long fp;
@@ -29,7 +40,7 @@ void init_vm(VM* vm) {
 	vm->pc = 0;
 	vm->sp = 0;
 	vm->fp = 0;
-	vm->memory = (short*) malloc(0x100000 * sizeof(short));
+	vm->memory = (signed short*) malloc(0x100000 * sizeof(short));
 }
 
 void clear_vm(VM* vm) {
@@ -50,31 +61,28 @@ short* read_bin(char path[]) {
 	fseek(fptr, 0L, SEEK_END); // Seek to end of file
 	size = ftell(fptr);	// Set the size to the offset
 	fseek(fptr, 0L, SEEK_SET); // Seek to beginning of file for loading into array
-	file = (short*)malloc(sizeof(short)*size); // Allocate memory based on the size of the file
+	file = (signed short*) malloc(sizeof(short)*size); // Allocate memory based on the size of the file
 
 	if (!file) {
 		fprintf(stderr, "Not enough memory");
 		exit(-1);
 	}
 	
-	fread(file, sizeof(short), size, fptr); // Read file and write it into the array
+	fread(file, sizeof(signed short), size, fptr); // Read file and write it into the array
 
 	if(file == NULL) {
 		fprintf(stderr, "Unable to read file");
 		exit(-1);
 	}
-	for (long i = 0; i < size; i++) {
-		file[i] = (file[i] << 8) | ((file[i] >> 8) & 0xFF);
-	}
 	fclose(fptr); // Close the file
 	return file; // This returns a malloc'ed value, which NEEDS TO BE FREED
 }
 
-short push(VM *vm, short data) {
+signed short push(VM *vm, signed short data) {
 	vm->memory[vm->sp++] = data;
 	return data;
 }
-short pop(VM *vm) {
+signed short pop(VM *vm) {
 	return vm->memory[--vm->sp];
 }
 
@@ -87,31 +95,49 @@ void print_vm(VM vm) {
 }
 
 int main(int argc, char* argv[]) {
-	short* code = read_bin(argv[1]);
+	signed short* code = read_bin(argv[1]);
 	VM vm;
 	init_vm(&vm);
 	while (code[vm.pc] != OP_EOF) {
 		switch(code[vm.pc]) {
-			case OP_IPUSH:
+			case OP_SCONST:
 				push(&vm, code[++vm.pc]);
 				break;
-			case OP_IPOP:
+			case OP_SPOP:
 				pop(&vm);
 				break;
-			case OP_INEGATE:
+			case OP_SNEGATE:
 				push(&vm, -1 * pop(&vm));
 				break;
-			case OP_IADD:
+			case OP_SADD:
 				push(&vm, pop(&vm) + pop(&vm));
 				break;
-			case OP_ISUB:{
-			 	short a = pop(&vm);
-			 	short b = pop(&vm);
+			case OP_SSUB:{
+			 	signed short a = pop(&vm);
+			 	signed short b = pop(&vm);
 				push(&vm, b - a);
 				break;}
+			case OP_SMULT:
+				push(&vm, pop(&vm) * pop(&vm));
+				break;
+			case OP_SDIV:{
+			 	signed short a = pop(&vm);
+			 	signed short b = pop(&vm);
+				push(&vm, b /  a);
+				break;}
+			case OP_SGT:{
+			 	signed short a = pop(&vm);
+			 	signed short b = pop(&vm);
+				if (b > a) {
+					vm.pc = code[vm.pc+1]--;
+				} else {
+					vm.pc++;
+				}
+				break;
+			}
 			default: break;
 		}
-		printf("%d \t", code[vm.pc]);
+		printf("%d \t", vm.pc);
 		print_vm(vm);
 		vm.pc++;
 	}

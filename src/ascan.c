@@ -310,6 +310,12 @@ Token* tokenize(char path[], int t) {
 				else if (!strcmp(name, "case")) append_array(&tokens, new_token(TOKEN_CASE, line, '\0'));
 				else if (!strcmp(name, "match")) append_array(&tokens, new_token(TOKEN_MATCH, line, '\0'));
 				else if (!strcmp(name, "using")) append_array(&tokens, new_token(TOKEN_USING, line, '\0'));
+				else if (!strcmp(name, "int")) append_array(&tokens, new_token(TOKEN_LET, line, "int"));
+				else if (!strcmp(name, "double")) append_array(&tokens, new_token(TOKEN_LET, line, "double"));
+				else if (!strcmp(name, "list")) append_array(&tokens, new_token(TOKEN_LET, line, "list"));
+				else if (!strcmp(name, "str")) append_array(&tokens, new_token(TOKEN_LET, line, "str"));
+				else if (!strcmp(name, "bool")) append_array(&tokens, new_token(TOKEN_LET, line, "bool"));
+				else if (!strcmp(name, "nil")) append_array(&tokens, new_token(TOKEN_LET, line, "nil"));
 				else append_array(&tokens, new_token(TOKEN_NAME, line, name));
 				if (text[i] != ' ') i--;
 			} else if (isdigit(text[i])) { // If the character is a letter or underscore, then add it as a 'name' token
