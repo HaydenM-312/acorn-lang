@@ -129,10 +129,10 @@ void init_token(Token *t, int new_type, long new_line, char new_value[]) {
 	t->line = new_line;
 	if (new_value != NULL) {
 		t->value = malloc(strlen(new_value));
-		t->value = new_value;
+	t->value = new_value; 
 	} else {
 		t->value = NULL;
-	}
+	} 
 }
 
 Token new_token(int new_type, long new_line, char new_value[]) {

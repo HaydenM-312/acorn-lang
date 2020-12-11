@@ -10,7 +10,6 @@ typedef struct Tokens Token;
 #ifndef TREE_TYPE
 #define TREE_TYPE
 typedef struct TREE Tree;
-
 #endif
 #ifndef ERROR_VAR
 #define ERROR_VAR

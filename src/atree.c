@@ -1,10 +1,12 @@
 #include "amain.h"
 
 struct TREE {
-	Token root;
-	Token* nodes;
+	Token node;
+	Tree* children;
 };
 
-Tree* make_ast(Token tokens[]) {
-	
+Tree make_ast(Token tokens[]) {
+	Tree ast;
+	ast.node = tokens[0];
+	return ast;
 }
