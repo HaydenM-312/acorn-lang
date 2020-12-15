@@ -94,6 +94,10 @@ void push(VM *vm, byte val) {
 	vm->stack[vm->sp++] = val;
 }
 
+int int_rdiv(int denom, int numer) {
+	return denom / numer;
+}
+
 int main(int argc, char* argv[]) {
 	byte* code = read_bin(argv[1]);
 	VM vm;
@@ -112,12 +116,13 @@ int main(int argc, char* argv[]) {
 				break;
 			case OP_ISUB:
 				push(&vm, pop(&vm) - pop(&vm));
+				push(&vm, -(pop(&vm)));
 				break;
 			case OP_IMULT:
 				push(&vm, pop(&vm) * pop(&vm));
 				break;
 			case OP_IDIV:
-				push(&vm, pop(&vm) / pop(&vm));
+				push(&vm, int_rdiv(pop(&vm), pop(&vm)));
 				break;
 			case OP_IEQU:
 				push(&vm, pop(&vm) == pop(&vm));
