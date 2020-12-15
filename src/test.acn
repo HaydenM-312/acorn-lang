@@ -1,8 +1,10 @@
-using iostream
+type vector = (double x, double y)
 
-int add int a, int b, int c = a + b + c 
-
-nil main =
-	|> stdout <- "1 + 3 + 9 equals: "
-	|> stdout <- (str) add 1, 3, 9 + "\n" ; This will print to the console 1 + 3 + 9 equals: 13
-end 
+let dot v:vector t:vector =
+	v.x * t.x + v.y * t.y
+	
+let main =
+	|> println "What is your name?"
+	|> name <- readLine
+	|> println "Hello " + name + "!"
+end

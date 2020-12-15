@@ -9,4 +9,4 @@ Tree make_ast(Token tokens[]) {
 	Tree ast;
 	ast.node = tokens[0];
 	return ast;
-}
+}  

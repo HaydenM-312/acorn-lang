@@ -37,10 +37,13 @@ enum Token_Types {
 	TOKEN_RARROW,
 	TOKEN_LARROW,
 	TOKEN_COMMA,
+	TOKEN_COLON,
 	TOKEN_DOT,
 	TOKEN_EOF,
 	TOKEN_SOF,
-	TOKEN_USING
+	TOKEN_USING,
+	TOKEN_DEFTYPE,
+	TOKEN_IN
 };
 char* Token_Types_Print[] = {
 	"TOKEN_AND",
@@ -78,10 +81,13 @@ char* Token_Types_Print[] = {
 	"TOKEN_RARROW",
 	"TOKEN_LARROW",
 	"TOKEN_COMMA",
+	"TOKEN_COLON",
 	"TOKEN_DOT",
 	"TOKEN_EOF",
 	"TOKEN_SOF",
-	"TOKEN_USING"
+	"TOKEN_USING",
+	"TOKEN_DEFTYPE",
+	"TOKEN_IN"
 };
 
 typedef struct TokenArr {
@@ -187,7 +193,7 @@ char* load_txt(char path[]) {
 	fclose(fptr); // Close the file
 
 	return file_text; // This returns a malloc'ed value, which NEEDS TO BE FREED
-}
+}  
 
 Token* tokenize(char path[], int t) {
 	char* text;
@@ -243,6 +249,9 @@ Token* tokenize(char path[], int t) {
 		}
 		case '|':
 			if (text[i+1] == '>') {append_array(&tokens, new_token(TOKEN_NULLJOINER, line, '\0')); i++;}
+			break;
+		case ':':
+			append_array(&tokens, new_token(TOKEN_COLON, line, '\0'));
 			break;
 		// Basic arithmatic
 		case '+':
@@ -303,7 +312,8 @@ Token* tokenize(char path[], int t) {
 				}
 				name[count] = '\0';
 				if (!strcmp(name, "let")) append_array(&tokens, new_token(TOKEN_LET, line, '\0'));
-				else if (!strcmp(name, "set")) append_array(&tokens, new_token(TOKEN_SET, line, '\0'));
+				else if (!strcmp(name, "type")) append_array(&tokens, new_token(TOKEN_DEFTYPE, line, '\0'));
+				else if (!strcmp(name, "in")) append_array(&tokens, new_token(TOKEN_IN, line, '\0'));
 				else if (!strcmp(name, "if")) append_array(&tokens, new_token(TOKEN_IF, line, '\0'));
 				else if (!strcmp(name, "then")) append_array(&tokens, new_token(TOKEN_THEN, line, '\0'));
 				else if (!strcmp(name, "elif")) append_array(&tokens, new_token(TOKEN_ELIF, line, '\0'));
@@ -311,14 +321,8 @@ Token* tokenize(char path[], int t) {
 				else if (!strcmp(name, "and")) append_array(&tokens, new_token(TOKEN_AND, line, '\0'));
 				else if (!strcmp(name, "or")) append_array(&tokens, new_token(TOKEN_OR, line, '\0'));
 				else if (!strcmp(name, "case")) append_array(&tokens, new_token(TOKEN_CASE, line, '\0'));
-				else if (!strcmp(name, "match")) append_array(&tokens, new_token(TOKEN_MATCH, line, '\0'));
+				else if (!strcmp(name, "match")) append_array(&tokens, new_token(TOKEN_MATCH, line, '\0')); 
 				else if (!strcmp(name, "using")) append_array(&tokens, new_token(TOKEN_USING, line, '\0'));
-				else if (!strcmp(name, "int")) append_array(&tokens, new_token(TOKEN_LET, line, "int"));
-				else if (!strcmp(name, "double")) append_array(&tokens, new_token(TOKEN_LET, line, "double"));
-				else if (!strcmp(name, "list")) append_array(&tokens, new_token(TOKEN_LET, line, "list"));
-				else if (!strcmp(name, "str")) append_array(&tokens, new_token(TOKEN_LET, line, "str"));
-				else if (!strcmp(name, "bool")) append_array(&tokens, new_token(TOKEN_LET, line, "bool"));
-				else if (!strcmp(name, "nil")) append_array(&tokens, new_token(TOKEN_LET, line, "nil"));
 				else append_array(&tokens, new_token(TOKEN_NAME, line, name));
 				if (text[i] != ' ') i--;
 			} else if (isdigit(text[i])) { // If the character is a letter or underscore, then add it as a 'name' token
