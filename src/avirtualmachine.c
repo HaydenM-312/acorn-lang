@@ -4,34 +4,46 @@ typedef signed char byte;
 
 enum op_codes {
 	OP_HALT,
-	OP_LOADI,
-	OP_LOADA,
-	OP_STORE,
-	OP_ADD,
-	OP_MULT,
-	OP_SUB,
-	OP_DIV
+	OP_ICONST,
+	OP_IADD,
+	OP_ISUB,
+	OP_IDIV,
+	OP_IMULT,
+	OP_IDUP,
+	OP_IPOP,
+	OP_ISTORE,
+	OP_ILOAD,
+	OP_GOTO,
+	OP_IGTE,
+	OP_ILTE,
+	OP_IGTEQ,
+	OP_ILTEQ,
+	OP_IEQU,
+	OP_INEQ,
+	OP_RET,
+	OP_CALL,
+	OP_IAND,
+	OP_IOR,
+	OP_INOT,
 
 };
 
 typedef struct {
-	byte* memory;
-	byte* call;
-	byte* registers;
+	byte* stack;
 	long pc;
 	long sp;
+	long fp;
 } VM;
 
 void init_vm(VM* vm) {
-	vm->pc = 0;
-	vm->sp = 0xfffff;
-	vm->memory = (byte*) calloc(0x100000, sizeof(byte)); // Reserve one megabyte of RAM
-	vm->registers = (byte*) calloc(0x8, sizeof(byte)); // Create 8 registers
+	vm->pc = 0x0;
+	vm->sp = 0x0;
+	vm->fp = 0xfffff;
+	vm->stack = (byte*) calloc(0x100000, sizeof(byte)); // Reserve one megabyte of RAM
 }
 
 void clear_vm(VM* vm) {
-	free(vm->memory);
-	free(vm->registers);
+	free(vm->stack);
 }
 
 byte* read_bin(char path[]) {
@@ -68,15 +80,18 @@ byte* read_bin(char path[]) {
 
 void print_vm(VM vm) {
 	printf("[");
-	for(int i = 0; i < 8; i++) {
-		printf(" %d", vm.registers[i]);
-	}
-	printf(" ] ");
-	printf("[");
-	for(int i = 0; i < 8; i++) {
-		printf(" %d", vm.memory[i]);
+	for(int i = 0; i < vm.sp; i++) {
+		printf(" %d", vm.stack[i]);
 	}
 	printf(" ]\n");
+}
+
+byte pop(VM* vm) {
+	return vm->stack[--vm->sp];
+}
+
+void push(VM *vm, byte val) {
+	vm->stack[vm->sp++] = val;
 }
 
 int main(int argc, char* argv[]) {
@@ -86,36 +101,49 @@ int main(int argc, char* argv[]) {
 	while (code[vm.pc] != OP_HALT) {
 		switch(code[vm.pc]) {
 			// 1 Byte instructions
-			case OP_LOADI:
-				vm.registers[code[++vm.pc]] = code[++vm.pc];
+			case OP_ICONST:
+				push(&vm, code[++vm.pc]);
 				break;
-			case OP_LOADA:
-				vm.registers[code[++vm.pc]] = vm.memory[code[++vm.pc]];
+			case OP_IPOP:
+				pop(&vm);
 				break;
-			case OP_STORE:
-				vm.memory[code[2+vm.pc]] = vm.registers[code[1+vm.pc]];
-				vm.pc += 2;
+			case OP_IADD:
+				push(&vm, pop(&vm) + pop(&vm));
 				break;
-			case OP_ADD:
-				vm.registers[code[3+vm.pc]] = vm.registers[code[1+vm.pc]] + vm.registers[code[2+vm.pc]];
-				vm.pc += 3;
+			case OP_ISUB:
+				push(&vm, pop(&vm) - pop(&vm));
 				break;
-			case OP_MULT:
-				vm.registers[code[3+vm.pc]] = vm.registers[code[1+vm.pc]] * vm.registers[code[2+vm.pc]];
-				vm.pc += 3;
+			case OP_IMULT:
+				push(&vm, pop(&vm) * pop(&vm));
 				break;
-			case OP_SUB:
-				vm.registers[code[3+vm.pc]] = vm.registers[code[1+vm.pc]] - vm.registers[code[2+vm.pc]];
-				vm.pc += 3;
+			case OP_IDIV:
+				push(&vm, pop(&vm) / pop(&vm));
 				break;
-			case OP_DIV:
-				vm.registers[code[3+vm.pc]] = vm.registers[code[1+vm.pc]] / vm.registers[code[2+vm.pc]];
-				vm.pc += 3;
+			case OP_IEQU:
+				push(&vm, pop(&vm) == pop(&vm));
+				break;
+			case OP_INEQ:
+				push(&vm, pop(&vm) != pop(&vm));
+				break;
+			case OP_IGTE:
+				push(&vm, pop(&vm) < pop(&vm));
+				break;
+			case OP_ILTE:
+				push(&vm, pop(&vm) > pop(&vm));
+				break;
+			case OP_IGTEQ:
+				push(&vm, pop(&vm) <= pop(&vm));
+				break;
+			case OP_ILTEQ:
+				push(&vm, pop(&vm) >= pop(&vm));
+				break;
+			case OP_INOT:
+				push(&vm, !pop(&vm));
 				break;
 			default: break;
 		}
 		vm.pc++;
-		printf("%d",vm.pc);
+		printf("%d",code[vm.pc]);
 		print_vm(vm);
 	}
 	clear_vm(&vm);
