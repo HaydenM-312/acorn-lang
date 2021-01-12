@@ -1,10 +1,1 @@
-type vector = (double x, double y)
-
-let dot v:vector t:vector =
-	v.x * t.x + v.y * t.y
-	
-let main =
-	|> println "What is your name?"
-	|> name <- readLine
-	|> println "Hello " + name + "!"
-end
+let x = 3 + 3 * 9 - 1
