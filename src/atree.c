@@ -1,12 +1,18 @@
+#pragma once
 #include "amain.h"
 
 struct TREE {
-	Token node;
+	Token* node;
 	Tree* children;
 };
 
-Tree make_ast(Token tokens[]) {
-	Tree ast;
-	ast.node = tokens[0];
-	return ast;
-}  
+void make_ast(Token* tokens, Tree* ast) {
+	ast->node = (Token*)malloc(sizeof(Token*));
+	ast->node = tokens;
+	ast->node = (Token*)malloc(sizeof(Token*));
+	ast->node = tokens; 
+}
+
+void free_ast(Tree* ast) {
+	free(ast->node);
+}

@@ -78,6 +78,7 @@ byte* read_bin(char path[]) {
 	
 }
 
+
 void print_vm(VM vm) {
 	printf("[");
 	for(int i = 0; i < vm.sp; i++) {
